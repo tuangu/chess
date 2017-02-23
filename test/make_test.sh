@@ -1,0 +1,1 @@
+g++ -std=c++11 parser_test.cpp ../src/parser.cpp -o parser_test -I.
