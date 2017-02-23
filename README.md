@@ -7,8 +7,8 @@
 
 ## Compiling
 You must have make and gcc in order to compile.
-1. `cd chess`
-2. `make chess`
+* `cd chess`
+* `make chess`
 
 Clean up:
 * `make clean`
