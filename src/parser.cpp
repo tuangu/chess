@@ -1,188 +1,137 @@
 #include "../header/parser.h"
 #include "../header/command.h"
 #include "../header/piece.h"
+#include "../header/board.h"
 
 #include <string>
+#include <memory>
+#include <set>
 
+using std::set;
 using std::string;
 
 Command
-Parser::parse(string& in) {
-    if (in == "quit") {
-        Command c;
-        c.type = command_type::QUIT;
-        return c;
+Parser::parseCommand(string& in, Board* board) {
+    Command ret;
+
+    if (in == "quit")
+        ret = Command(CommandType::QUIT, in);
+
+    else if (in == "save")
+        ret = Command(CommandType::SAVE, in);
+
+    else if (in == "load")
+        ret = Command(CommandType::LOAD, in);
+
+    else if (in == "restart")
+        ret = Command(CommandType::RESTART, in);
+
+    else if (in.length() == 4) {
+        int origin = to1d(in[0], in[1]);
+        int dest = to1d(in[2], in[3]);
+
+        bool isValid = isValidMove(origin, dest, board);
+        if (isValid)
+            ret = Command(CommandType::CONTROL, in, origin, dest);
+        else 
+            ret = Command(CommandType::INVALID, in);
     }
 
-    if (in == "save") {
-        Command c;
-        c.type = command_type::SAVE;
-        return c;
-    }
-
-    if (in == "load") {
-        Command c;
-        c.type = command_type::LOAD;
-        return c;
-    }
-
-    // command of PAWN
-    // ex: e5-e7, e5xf6
-    if (in.length() == 5) {
-        Command c;
-
-        char origin_c = in[0];
-        char origin_i = in[1];
-        char dash = in[2];
-        char dest_c = in[3];
-        char dest_i = in[4];
-
-        // dash should be '-' or 'x'
-        bool capture;
-        if (dash == '-') 
-            capture = false;
-        else if (dash == 'x')
-            capture = true;
-        else {
-            c.type = command_type::INVALID;
-            return c;
-        }
-
-        int origin_f = files(origin_c);
-        int origin_r = ranks(origin_i);
-        int dest_f = files(dest_c);
-        int dest_r = ranks(dest_i);
-
-        // check whether origin and dest are valid
-        if (origin_f == 0 || origin_r == 0 || dest_f == 0 || dest_r == 0) {
-            c.type = command_type::INVALID;
-            return c;
-        }
-
-        c.type = command_type::PLAY;
-        c.piece = piece_type::PAWN;
-        c.origin = origin_f + (origin_r - 1)*8;
-        c.dest = dest_f + (dest_r - 1)*8;
-        c.capture = capture ? true : false;
-        c.str = in;
-
-        return c; 
-    }
-
-    // the rest
-    if (in.length() == 6) {
-        Command c;
-
-        piece_type chessType;
-        char chessMen = in[0];
-        switch (chessMen) {
-            case 'K':
-                chessType = piece_type::KING;
-                break;
-            case 'Q':
-                chessType = piece_type::QUEEN;
-                break;
-            case 'R':
-                chessType = piece_type::ROOK;
-                break;
-            case 'B':
-                chessType = piece_type::BISHOP;
-                break;
-            case 'N':
-                chessType = piece_type::KNIGHT;
-                break;
-            default:
-                c.type = command_type::INVALID;
-                return c;
-        }
-
-        char origin_c = in[1];
-        char origin_i = in[2];
-        char dash = in[3];
-        char dest_c = in[4];
-        char dest_i = in[5];
-            
-        // dash should be '-' or 'x'
-        bool capture;
-        if (dash == '-') 
-            capture = false;
-        else if (dash == 'x')
-            capture = true;
-        else {
-            c.type = command_type::INVALID;
-            return c;
-        }
-
-        int origin_f = files(origin_c);
-        int origin_r = ranks(origin_i);
-        int dest_f = files(dest_c);
-        int dest_r = ranks(dest_i);
-
-        // check whether origin and dest are valid
-        if (origin_f == 0 || origin_r == 0 || dest_f == 0 || dest_r == 0) {
-            c.type = command_type::INVALID;
-            return c;
-        }
-
-        c.type = command_type::PLAY;
-        c.piece = chessType;
-        c.origin = origin_f + (origin_r - 1)*8;
-        c.dest = dest_f + (dest_r - 1)*8;
-        c.capture = capture ? true : false;
-        c.str = in;
-
-        return c; 
-    }
-
-    //otherwise, return invalid command
-    Command c;
-    c.type = command_type::INVALID;
-    return c;
-}
-
-int
-Parser::files(char c) {
-    int ret;
-
-    switch (c) {
-        case 'a':
-            ret = 1;
-            break;
-        case 'b':
-            ret = 2;
-            break;
-        case 'c':
-            ret = 3;
-            break;
-        case 'd':
-            ret = 4;
-            break;
-        case 'e':
-            ret = 5;
-            break;
-        case 'f':
-            ret = 6;
-            break;
-        case 'g':
-            ret = 7;
-            break;
-        case 'h':
-            ret = 8;
-            break;
-        default:
-            ret = 0;
-            break;
-    }
+    else 
+        ret = Command(CommandType::INVALID, in);
 
     return ret;
 }
 
-int 
-Parser::ranks(char c) {
-    int tmp = c;
+// check if the input contains valid move or not
+bool 
+Parser::isValidMove(int origin, int dest, Board* board) {
+    // invalid input, ex: 
+    if (origin == 0 || dest == 0)
+        return false;
+    
+    // check at origin point
+    auto originPiece = board->titles.find(origin);
+    if (originPiece == board->titles.end())
+        return false;
 
-    if ((c > 48) && (c < 57))
-        return tmp - 48;
+    // check if piece at origin can move to destination point or not
+    bool isPossibleMove = board->titles.at(origin)->isPossibleMove(dest);
+    if (!isPossibleMove)
+        return false;
+    
+    // if piece is a pawn, it can only perform a capture move if there is 
+    // a enemy piece at the destination square
+    if ((board->titles.at(origin)->getType() == PieceType::PAWN)
+        && (((dest - origin) % 8) != 0) ) {
+        auto searchCapture = board->titles.find(dest);
+        if (searchCapture == board->titles.end())
+            return false;
+    }
+    
+    // check if piece at origin and dest are friendly or not
+    auto searchDest = board->titles.find(dest);
+    if (searchDest != board->titles.end())
+        if (searchDest->second->getColor() == originPiece->second->getColor())
+            return false;
+    
+    // check if piece is blocked by other piece or not
+    set<int> blockedPos = originPiece->second->getBlockedPosition(origin, dest);
+    for (auto beg = blockedPos.begin(); beg != blockedPos.end(); ++beg) {
+        auto searchBlocked = board->titles.find(*beg);
+        if (searchBlocked != board->titles.end())
+            return false;
+    }
+
+    // otherwise, return true
+    return true;
+}
+
+// 2d to 1d, ex: e5 = 20
+// if rank or file or both is invalid (!a-h, !1-8), return 0
+int 
+Parser::to1d(char file, char rank) {
+    int f, r;
+
+    // file to int
+    switch (file) {
+        case 'a':
+            f = 1;
+            break;
+        case 'b':
+            f = 2;
+            break;
+        case 'c':
+            f = 3;
+            break;
+        case 'd':
+            f = 4;
+            break;
+        case 'e':
+            f = 5;
+            break;
+        case 'f':
+            f = 6;
+            break;
+        case 'g':
+            f = 7;
+            break;
+        case 'h':
+            f = 8;
+            break;
+        default:
+            f = 0;
+            break;
+    }
+
+    // rank to int
+    if ((rank > 48) && (rank < 57))
+        r =  (int)rank - 48;
     else
-        return 0;
+        r = 0;
+
+    if (f == 0 || r == 0)
+        return 0; 
+    else
+        return f + (r - 1)*8;
 }

@@ -1,10 +1,20 @@
 #ifndef PAWN_H
 #define PAWN_H
 
-#include "../header/piece.h"
+#include "piece.h"
+
+#include <set>
+#include <memory>
 
 class Pawn : public Piece {
-    Pawn(int location, bool color);
+public:
+    Pawn(int location, bool c);
+private:
+    bool color;
+    PieceType type;
+    int currentLocation;
+    std::shared_ptr<std::set<int>> possibleMoves;
+    bool firstMove;
 };
 
 #endif

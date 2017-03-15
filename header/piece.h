@@ -2,8 +2,9 @@
 #define PIECE_H
 
 #include <set>
+#include <memory>
 
-enum piece_type{
+enum PieceType{
     PAWN,
     BISHOP,
     KNIGHT,
@@ -16,22 +17,22 @@ class Piece {
 public:
     virtual ~Piece();
     
-    virtual std::set<int> possibleMoves() = 0;
-    
-    virtual void generateMoves() = 0;
-    
+    virtual int getCurrentLocation() = 0;
+
     virtual bool getColor() = 0;
-    
-    virtual piece_type pieceType() = 0;
 
-    virtual bool checkPossibleMoves(int dest) = 0;
+    virtual PieceType getType() = 0;
 
-    virtual void updateCurrentLocation(int lo) = 0;
+    virtual void setCurrentLocation(int) = 0;
+
+    virtual bool isPossibleMove(int) = 0;
+
+    virtual std::set<int> getBlockedPosition(int, int);
+
 private:
-    bool color;
-    piece_type type;
-    int currentLocation;
-    bool died;
+    void generatePossibleMoves() = 0;
+
+    //virtual std::shared_ptr<std::set<int>> getPossibleMoves() = 0;
 };
 
 #endif

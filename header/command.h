@@ -4,7 +4,7 @@
 #include "piece.h"
 #include "string"
 
-enum command_type{
+enum CommandType{
     INVALID,
     LOAD,
     SAVE,
@@ -13,12 +13,11 @@ enum command_type{
 };
 
 struct Command {
-    command_type type;
-    //bool color;
-    piece_type piece;
+    Command(CommandType t, std::string in, int ori = 0, int des = 0):
+        type(t), raw(in), origin(ori), dest(des) { }
+    CommandType type;
     int origin;
     int dest;
-    bool capture;
-    std::string str;
+    std::string raw;
 };
 #endif

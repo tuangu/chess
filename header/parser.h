@@ -2,17 +2,22 @@
 #define PARSER_H
 
 #include "command.h"
+#include "piece.h"
+#include "board"
 
 #include <string>
+#include <memory>
+#include <map>
 
 class Parser {
 public:
-    Parser() = default;
+    Parser();
 
-    Command parse(std::string&); 
-
+    Command parseCommand(std::string&, Board*); 
+    
 private:
-    int files(char);
-    int ranks(char); 
+    bool isValidMove(int origin, int dest, Board*);
+
+    int to1d(char, char);
 };
 #endif 
