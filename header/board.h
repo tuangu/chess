@@ -1,42 +1,35 @@
 #ifndef BOARD_H
 #define BOARD_H
 
-#include <map>
-#include <fstream>
-#include <utility>
-#include <vector>
-
+#include "drawer.h"
+#include "parser.h"
 #include "piece.h"
 #include "command.h"
 
+#include <map>
+#include <vector>
+#include <string>
+
 class Board {
+    friend class Parser;
+    friend class Drawer;
 public:
-    Board();
-
+    Board(Parser* parser, Drawer* drawer);
     ~Board();
+    Board(const Board& rhs);
+    void operator=(const Board& rhs);
+    void startGame();
 
-    void initializeNewGame();
-
-    void loadSaveGame(std::ifstream&);
-
-    void saveCurrentGame(std::ofstream&);
-
-    void handleCommand(Command&);
-
-    
 private:
-    std::map<int, Piece*> *titles;
-
+    std::map<int, std::shared_ptr<Piece>> squares;
+    std::vector<std::string> moves;
+    Parser* parser;
+    Drawer* drawer;
     bool whiteTurn;
 
-    std::vector<std::pair<string, string>> gameMoves;
-
-    int to1d(int file, int rank);
-
-    std::pair<int, int> toXy(int location); 
-
-    void handleInvalidCmd();
-
-    void validateMove(Command& c);
+    void movePiece(int origin, int dest);
+    void saveGame(string fileName);
+    void loadGame(string fileName);
+    void initBoard();
 };
 #endif

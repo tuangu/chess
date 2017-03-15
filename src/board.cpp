@@ -1,6 +1,7 @@
 #include "../header/board.h"
 #include "../header/command.h"
 #include "../header/piece.h"
+#include "../header/utility.h"
 
 #include "../header/king.h"
 #include "../header/queen.h"
@@ -11,114 +12,223 @@
 
 #include <utility>
 #include <map>
-#include <set>
+#include <vector>
+#include <string>
+#include <memory>
+#include <iostream>
+#include <fstream>
 
 using std::map;
+using std::vector;
+using std::string;
+using std::shared_ptr;
+using std::cin;
+using std::cout;
+using std::endl;
+using std::ofstream;
+using std::ifstream;
 
-Board::Board(): titles(new map<int, Piece*>()), whiteTurn(true) {
-}
-
-Board::~Board() {
-}
-
-void
-Board::initializeNewGame() {
-    // white
-    titles->insert(to1d(1,1), new Rook()); 
-    titles->insert(to1d(8,1), new Rook());
-    titles->insert(to1d(2,1), new Knight()); 
-    titles->insert(to1d(7,1), new Knight());
-    titles->insert(to1d(3,1), new Bishop());
-    titles->insert(to1d(6,1), new Bishop());
-    titles->insert(to1d(4,1), new Queen());
-    titles->insert(to1d(5,1), new King());
-    for (int i = 1; i < 9; ++i) 
-        titles->insert(to1d(i,2), new Pawn());
-
-    // black
-    titles->insert(to1d(1,8), new Rook()); 
-    titles->insert(to1d(8,8), new Rook());
-    titles->insert(to1d(2,8), new Knight()); 
-    titles->insert(to1d(7,8), new Knight());
-    titles->insert(to1d(3,8), new Bishop());
-    titles->insert(to1d(6,8), new Bishop());
-    titles->insert(to1d(4,8), new Queen());
-    titles->insert(to1d(5,8), new King());
-    for (int i = 1; i < 9; ++i) 
-        titles->insert(to1d(i,7), new Pawn());
-
+// white first
+Board::Board(Parser* p, Drawer* d):
+    squares(map<int, shared_ptr<Piece>()),
+    moves(vector<string>()),
+    parser(p), drawer(d), whiteTurn(true) {
     
 }
 
+// destructor
+Board::~Board() {
+    if (parser)
+        delete parser;
+    if (drawer)
+        delete drawer;
+}
+
+// copy constructor
+Board::Board(const Board& rhs):
+    squares(rhs.squares), moves(rhs.moves),
+    parser(rhs.parser), drawer(rhs.drawer), whiteTurn(rhs.whiteTurn) {
+}
+
+// copy-assign operator
+void 
+Board::operator=(const Board& rhs) {
+    if (parser)
+        delete parser;
+    if (drawer)
+        delete drawer;
+    
+    squares = rhs.squares;
+    moves = rhs.moves;
+    parser = rhs.parser;
+    drawer = rhs.drawer;
+    whiteTurn = rhs.whiteTurn;
+}
+
+// TODO
 void
-Board::handleCommand(Command &c) {
-    auto square = titles->find(c.origin);
-    if (square == titles->end()) {
-        handleInvalidCmd();
-        return;
-    }
+Board::startGame() {
+    // print instruction
 
-    Piece* men = square->second;
+    while (true) {
+        // draw board 
+        drawer->draw(std::cout, this);
 
-    if ((men->pieceType() != c.type) || 
-        (men->getColor() ^ whiteTurn) ) {
-        handleInvalidCmd();
-        return;
-    }
+        // get input
+        string in;
+        cout << ": ";
+        cin >> in;
 
-    //bool capture = c.capture;
+        // parse input
+        Command c = parser->parseCommand(in, this);
 
-    if (c.capture) {
-        auto destSqr = titles->find(c.dest);
-        if (destSqr == titles->end()) {
-            handleInvalidCmd();
-            return;
+        // handle input
+        if (c.type == CommandType::QUIT) {
+            break;
+        } else if (c.type == CommandType::LOAD) {
+            string file;
+            cin >> file;
+            loadGame(file);
+        } else if (c.type == CommandType::SAVE) {
+            string file;
+            cin >> file;
+            saveGame(file);
+        } else if (c.type == CommandType::RESTART) {
+            initBoard();
+        } else if (c.type == CommandType::CONTROL) {
+            movePiece(c.origin, c.dest);
+            moves.push_back(c.raw);
+        } else if (c.type == CommandType::INVALID) {
+            continue;
         }
     }
+}
 
-    if (men->checkPossibleMoves(c.dest)) {
-        if (validateMove(c)) {
-            // remove piece at destination
-            if (c.capture)
-                titles->erase(c.dest);
-            //titles->erase(c.origin);
+void 
+Board::movePiece(int origin, int dest) {
+    // remove piece at dest
+    auto destPiece = squares.find(dest);
+    if (destPiece != squares.end())
+        squares.erase(destPiece);
+    
+    // copy piece from origin into dest
+    auto originPiece = squares.find(origin);
+    std::shared_ptr<Piece> chessPiece = originPiece->second;
+    squares.insert(std::make_pair(dest, chessPiece));
 
-            // insert piece to the destination
-            titles->insert(c.dest, square->second);
+    // remove piece at origin
+    squares.erase(originPiece);
 
-            // update new location
-            titles->at(dest)->
+    // update currentLocation
+    //squares[dest]->setCurrentLocation(dest);
+    auto newDest = squares.find(dest);
+    newDest->second->setCurrentLocation(dest);
+}
 
-        } else {
-            handleInvalidCmd();
-            return;
+void 
+Board::saveGame(string fileName) {
+    ofstream out;
+    out.open(fileName);
+
+    if (out) {
+        for (int i = 0; i < moves.size(); ++i) {
+            out << moves[i] << "\n";
+        }
+
+        if (whiteTurn)
+            out << "1" << "\n";
+        else 
+            out << "0" << "\n";
+
+        out.close();
+    } else {
+        // error 
+        cout << "Error: can not write game to given file." << endl;
+    }
+}
+
+void
+Board::loadGame(string fileName) {
+    ifstream in;
+    
+    in.open(fileName);
+    if (in) {
+        string line;
+        vector<string> loaded;
+        bool success = true;
+
+        while (getline(in, line)) {
+            loaded.push_back(line);
+        }
+
+        moves.clear();
+        for (int i = 0, sz = loaded.size() - 1; i < sz; ++i) {
+            Command c = parser->parseCommand(loaded[i].substr(0,4));
+            if (c.type != CommandType::CONTROL) {
+                // error
+                success = false;
+                cout << "Error: can not read game from given file." << endl;
+                // init new board
+                initBoard();
+                break;
+            } else {
+                movePiece(c.origin, c.dest);
+                moves.push_back(c.raw);
+            }
+        }
+        // restore whiteTurn value
+        if (success) {
+            string oldState = loaded[loaded.size() - 1];
+            if (oldState.substr(0,1) == "1")
+                whiteTurn = true;
+            else if (oldState.substr(0,1) == "0")
+                whiteTurn = false;
+            else {
+                // error
+                cout << "Error: can not read game from given file." << endl;
+                cout << "Chessboard will be reset." << endl;
+                initBoard();
+            } 
         }
     } else {
-        handleInvalidCmd();
-        return;
+        // error
+        cout << "Error: can not read game from given file." << endl;
+        cout << "Chessboard will be reset." << endl;
     }
+}
+
+// TODO
+void 
+Board::initBoard() {
+    squares.clear();
+    moves.clear();
+    whiteTurn = true;
+
+    // white
+    squares[1] = shared_ptr<Piece>(new Rook(1, true));
+    squares[2] = shared_ptr<Piece>(new Knight(2, true));
+    squares[3] = shared_ptr<Piece>(new Bishop(3, true));
+    squares[4] = shared_ptr<Piece>(new Queen(4, true));
+    squares[5] = shared_ptr<Piece>(new King(5, true));
+    squares[6] = shared_ptr<Piece>(new Bishop(6, true));
+    squares[7] = shared_ptr<Piece>(new Knight(7, true));
+    squares[8] = shared_ptr<Piece>(new Rook(8, true));
+
+    for (int i = 9; i < 17; ++i)
+        squares[i] = shared_ptr<Piece>(new Pawn(i, true));
+
+    // black
+    squares[57] = shared_ptr<Piece>(new Rook(57, false));
+    squares[58] = shared_ptr<Piece>(new Knight(58, false));
+    squares[59] = shared_ptr<Piece>(new Bishop(59, false));
+    squares[60] = shared_ptr<Piece>(new Queen(60, false));
+    squares[61] = shared_ptr<Piece>(new King(61, false));
+    squares[62] = shared_ptr<Piece>(new Bishop(62, false));
+    squares[63] = shared_ptr<Piece>(new Knight(63, false));
+    squares[64] = shared_ptr<Piece>(new Rook(64, false));
+
+    for (int i = 49; i < 57; ++i) 
+        squares[i] = shared_ptr<Piece>(new Pawn(i, false));
 
 }
 
-
-//!-- utility
-int 
-Board::to1d(int file, int rank) {
-    if (file < 1 || file > 8 || rank < 1 || rank > 8)
-        return 0;
-    else
-        return file + (rank-1)*8;
-}
-
-std::pair<int, int> 
-Board::toXy(int location) {
-    if (location > 64 || location < 1)
-        return make_pair<int, int>(0, 0);
-    
-    std::pair<int, int> ret(1, 0);
-    while ((location - ret.first) % 8 != 0)
-        ++ret.first;
-    ret.second = (location - ret.first) / 8 + 1;
-
-    return ret;
-}

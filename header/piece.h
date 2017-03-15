@@ -27,10 +27,10 @@ public:
 
     virtual bool isPossibleMove(int) = 0;
 
-    virtual std::set<int> getBlockedPosition(int, int);
+    virtual std::set<int> getBlockedPosition(int, int) = 0;
 
 private:
-    void generatePossibleMoves() = 0;
+    virtual void generatePossibleMoves() = 0;
 
     //virtual std::shared_ptr<std::set<int>> getPossibleMoves() = 0;
 };

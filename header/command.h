@@ -9,7 +9,8 @@ enum CommandType{
     LOAD,
     SAVE,
     QUIT,
-    PLAY
+    CONTROL,
+    RESTART
 };
 
 struct Command {

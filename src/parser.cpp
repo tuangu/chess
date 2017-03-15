@@ -51,35 +51,35 @@ Parser::isValidMove(int origin, int dest, Board* board) {
         return false;
     
     // check at origin point
-    auto originPiece = board->titles.find(origin);
-    if (originPiece == board->titles.end())
+    auto originPiece = board->squares.find(origin);
+    if (originPiece == board->squares.end())
         return false;
 
     // check if piece at origin can move to destination point or not
-    bool isPossibleMove = board->titles.at(origin)->isPossibleMove(dest);
+    bool isPossibleMove = board->squares.at(origin)->isPossibleMove(dest);
     if (!isPossibleMove)
         return false;
     
     // if piece is a pawn, it can only perform a capture move if there is 
     // a enemy piece at the destination square
-    if ((board->titles.at(origin)->getType() == PieceType::PAWN)
+    if ((board->squares.at(origin)->getType() == PieceType::PAWN)
         && (((dest - origin) % 8) != 0) ) {
-        auto searchCapture = board->titles.find(dest);
-        if (searchCapture == board->titles.end())
+        auto searchCapture = board->squares.find(dest);
+        if (searchCapture == board->squares.end())
             return false;
     }
     
     // check if piece at origin and dest are friendly or not
-    auto searchDest = board->titles.find(dest);
-    if (searchDest != board->titles.end())
+    auto searchDest = board->squares.find(dest);
+    if (searchDest != board->squares.end())
         if (searchDest->second->getColor() == originPiece->second->getColor())
             return false;
     
     // check if piece is blocked by other piece or not
     set<int> blockedPos = originPiece->second->getBlockedPosition(origin, dest);
     for (auto beg = blockedPos.begin(); beg != blockedPos.end(); ++beg) {
-        auto searchBlocked = board->titles.find(*beg);
-        if (searchBlocked != board->titles.end())
+        auto searchBlocked = board->squares.find(*beg);
+        if (searchBlocked != board->squares.end())
             return false;
     }
 
