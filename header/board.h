@@ -10,6 +10,9 @@
 #include <vector>
 #include <string>
 
+class Drawer;
+class Parser;
+
 class Board {
     friend class Parser;
     friend class Drawer;
@@ -28,8 +31,8 @@ private:
     bool whiteTurn;
 
     void movePiece(int origin, int dest);
-    void saveGame(string fileName);
-    void loadGame(string fileName);
+    void saveGame(std::string fileName);
+    void loadGame(std::string fileName);
     void initBoard();
 };
 #endif

@@ -17,6 +17,8 @@
 #include <memory>
 #include <iostream>
 #include <fstream>
+#include <chrono>
+#include <thread>
 
 using std::map;
 using std::vector;
@@ -30,7 +32,7 @@ using std::ifstream;
 
 // white first
 Board::Board(Parser* p, Drawer* d):
-    squares(map<int, shared_ptr<Piece>()),
+    squares(map<int, shared_ptr<Piece>>()),
     moves(vector<string>()),
     parser(p), drawer(d), whiteTurn(true) {
     
@@ -68,11 +70,12 @@ Board::operator=(const Board& rhs) {
 // TODO
 void
 Board::startGame() {
+    initBoard();
     // print instruction
 
     while (true) {
         // draw board 
-        drawer->draw(std::cout, this);
+        drawer->draw(this);
 
         // get input
         string in;
@@ -87,10 +90,12 @@ Board::startGame() {
             break;
         } else if (c.type == CommandType::LOAD) {
             string file;
+            cout << "From file: ";
             cin >> file;
             loadGame(file);
         } else if (c.type == CommandType::SAVE) {
             string file;
+            cout << "To file: ";
             cin >> file;
             saveGame(file);
         } else if (c.type == CommandType::RESTART) {
@@ -99,6 +104,7 @@ Board::startGame() {
             movePiece(c.origin, c.dest);
             moves.push_back(c.raw);
         } else if (c.type == CommandType::INVALID) {
+            cout << "Invalid command" <<endl;
             continue;
         }
     }
@@ -123,6 +129,9 @@ Board::movePiece(int origin, int dest) {
     //squares[dest]->setCurrentLocation(dest);
     auto newDest = squares.find(dest);
     newDest->second->setCurrentLocation(dest);
+
+    // update whiteTurn
+    whiteTurn = !whiteTurn;
 }
 
 void 
@@ -131,7 +140,7 @@ Board::saveGame(string fileName) {
     out.open(fileName);
 
     if (out) {
-        for (int i = 0; i < moves.size(); ++i) {
+        for (vector<string>::size_type i = 0; i < moves.size(); ++i) {
             out << moves[i] << "\n";
         }
 
@@ -141,9 +150,12 @@ Board::saveGame(string fileName) {
             out << "0" << "\n";
 
         out.close();
+        cout << "Successfully save current game.";
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     } else {
         // error 
         cout << "Error: can not write game to given file." << endl;
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     }
 }
 
@@ -163,11 +175,14 @@ Board::loadGame(string fileName) {
 
         moves.clear();
         for (int i = 0, sz = loaded.size() - 1; i < sz; ++i) {
-            Command c = parser->parseCommand(loaded[i].substr(0,4));
+            string _in = loaded[i].substr(0,4);
+            Command c = parser->parseCommand(_in, this);
             if (c.type != CommandType::CONTROL) {
                 // error
                 success = false;
                 cout << "Error: can not read game from given file." << endl;
+                cout << "Chessboard will be reset." << endl;
+                std::this_thread::sleep_for(std::chrono::milliseconds(1000));
                 // init new board
                 initBoard();
                 break;
@@ -187,13 +202,14 @@ Board::loadGame(string fileName) {
                 // error
                 cout << "Error: can not read game from given file." << endl;
                 cout << "Chessboard will be reset." << endl;
+                std::this_thread::sleep_for(std::chrono::milliseconds(1000));
                 initBoard();
             } 
         }
     } else {
         // error
         cout << "Error: can not read game from given file." << endl;
-        cout << "Chessboard will be reset." << endl;
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     }
 }
 
@@ -215,7 +231,7 @@ Board::initBoard() {
     squares[8] = shared_ptr<Piece>(new Rook(8, true));
 
     for (int i = 9; i < 17; ++i)
-        squares[i] = shared_ptr<Piece>(new Pawn(i, true));
+        squares[i] = shared_ptr<Piece>(new Pawn(i, true, true));
 
     // black
     squares[57] = shared_ptr<Piece>(new Rook(57, false));
@@ -228,7 +244,7 @@ Board::initBoard() {
     squares[64] = shared_ptr<Piece>(new Rook(64, false));
 
     for (int i = 49; i < 57; ++i) 
-        squares[i] = shared_ptr<Piece>(new Pawn(i, false));
+        squares[i] = shared_ptr<Piece>(new Pawn(i, false, true));
 
 }
 

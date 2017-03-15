@@ -5,13 +5,15 @@
 #include "piece.h"
 
 #include <ostream>
+#include <string>
 
+class Board;
 class Drawer {
 public:
-    void draw(std::ostream& out, Board* board);
-
+    void draw(Board* board);
 private:
     char pieceToString(bool color, PieceType type);
+    
 };
 
 #endif

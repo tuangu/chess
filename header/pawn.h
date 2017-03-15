@@ -8,7 +8,7 @@
 
 class Pawn : public Piece {
 public:
-    Pawn(int location, bool c);
+    Pawn(int location, bool c, bool firstMove);
     int getCurrentLocation();
     bool getColor();
     PieceType getType();
@@ -22,7 +22,7 @@ private:
     std::shared_ptr<std::set<int>> possibleMoves;
     bool firstMove;
 
-    void generatePossibleMoves();
+    void generatePossibleMoves(int);
 };
 
 #endif

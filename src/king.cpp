@@ -53,11 +53,11 @@ King::isPossibleMove(int loc) {
 set<int>
 King::getBlockedPosition(int ori, int des) {
     // return empty set in case of invalid origin and destination
-    if (ori > 64 || ori < 1 || des > 64 || des < 1)
-        return set<int>();
+    // if (ori > 64 || ori < 1 || des > 64 || des < 1)
+    //     return set<int>();
 
-    pair<int, int> origin = to2d(ori);
-    pair<int, int> dest = to2d(des);
+    // pair<int, int> origin = to2d(ori);
+    // pair<int, int> dest = to2d(des);
 
     return set<int>();
 }

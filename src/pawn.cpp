@@ -1,4 +1,4 @@
-#include "../header/piece.h"
+#include "../header/pawn.h"
 
 #include "../header/piece.h"
 #include "../header/utility.h"

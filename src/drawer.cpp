@@ -1,18 +1,25 @@
 #include "../header/drawer.h"
 #include "../header/board.h"
 #include "../header/piece.h"
+#include "../header/utility.h"
 
 #include <ostream>
+#include <iostream>
 #include <string>
 #include <memory>
+#include <utility>
 
-using shared_ptr;
+using std::shared_ptr;
 using std::string;
+using std::endl;
+using std::pair;
+using std::cout;
 
 
 void
-Drawer::draw(std::ostream& out, Board* board) {
-    string rep = string(".", 64);
+Drawer::draw(Board* board) {
+    char dot = '.';
+    string rep(64, dot);
     
     for (auto beg = board->squares.begin(); beg != board->squares.end(); ++beg) {
         int pos = beg->first;
@@ -23,19 +30,28 @@ Drawer::draw(std::ostream& out, Board* board) {
 
         char pie = pieceToString(color, type);
         rep[pos-1] = pie;  
+        // pair<int, int> xy = to2d(pos);
+        // cout << xy.first << ":" << xy.second;
+        // cout << " " << (color ? "white " : "black ");
+        // cout << type << endl; 
     }
 
-    out << "  " << "abcdefgh" << "\n";
-    out << "\n";
-    out << "1 " << rep.substr(0,8) << "\n";
-    out << "2 " << rep.substr(8,8) << "\n";
-    out << "3 " << rep.substr(16,8) << "\n";
-    out << "4 " << rep.substr(24,8) << "\n";
-    out << "5 " << rep.substr(32,8) << "\n";
-    out << "6 " << rep.substr(40,8) << "\n";
-    out << "7 " << rep.substr(48,8) << "\n";
-    out << "8 " << rep.substr(56,8) << "\n";
-    out << "\n";
+    if (system("CLS")) 
+        system("clear");
+    cout << "white piece: lower letter, BLACK piece: UPPER letter" << endl;
+    cout << "Command:\n\t[origin][dest]: move piece from origin(ex: e7) to dest(ex: e5)\n\tload: load saved game\n\tsave: save current game\n\trestart: reset board\n\tquit: quit game\n" << endl;
+    cout << "   " << "a b c d e f g h " << endl;
+    cout << "-------------------" << endl;
+    for (string::size_type i = 0; i < 8; ++i) {
+        cout << i+1 << "| ";
+        string out = rep.substr(i*8, 8);
+        for (auto i : out)
+            cout << i << " ";
+        cout << endl;
+    }
+    cout << "-------------------" << endl;
+    cout << "   " << "a b c d e f g h " << endl;
+    cout << (board->whiteTurn ? "WHITE" : "BLACK");
 }
 
 char
@@ -44,7 +60,7 @@ Drawer::pieceToString(bool color, PieceType type) {
 
     switch (type) {
         case PieceType::PAWN :
-            ret = 'p';
+            ret = 'a';
             break;
         case PieceType::BISHOP :
             ret = 'b';

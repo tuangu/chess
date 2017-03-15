@@ -14,8 +14,9 @@ enum CommandType{
 };
 
 struct Command {
+    Command() = default;
     Command(CommandType t, std::string in, int ori = 0, int des = 0):
-        type(t), raw(in), origin(ori), dest(des) { }
+        type(t), origin(ori), dest(des), raw(in) { }
     CommandType type;
     int origin;
     int dest;

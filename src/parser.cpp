@@ -50,9 +50,13 @@ Parser::isValidMove(int origin, int dest, Board* board) {
     if (origin == 0 || dest == 0)
         return false;
     
-    // check at origin point
+    // check if origin has a piece or not
     auto originPiece = board->squares.find(origin);
     if (originPiece == board->squares.end())
+        return false;
+    
+    // check if its turn or not
+    if (originPiece->second->getColor() != board->whiteTurn)
         return false;
 
     // check if piece at origin can move to destination point or not

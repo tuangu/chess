@@ -1,4 +1,4 @@
-#include "../header/knight.cpp"
+#include "../header/knight.h"
 
 #include "../header/piece.h"
 #include "../header/utility.h"

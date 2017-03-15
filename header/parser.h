@@ -3,16 +3,15 @@
 
 #include "command.h"
 #include "piece.h"
-#include "board"
+#include "board.h"
 
 #include <string>
 #include <memory>
 #include <map>
 
+class Board;
 class Parser {
 public:
-    Parser();
-
     Command parseCommand(std::string&, Board*); 
     
 private:

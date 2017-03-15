@@ -21,7 +21,7 @@ private:
     int currentLocation;
     std::shared_ptr<std::set<int>> possibleMoves;
 
-    void generatePossibleMoves();
+    void generatePossibleMoves(int);
 };
 
 #endif

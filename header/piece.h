@@ -14,9 +14,7 @@ enum PieceType{
 };
 
 class Piece {
-public:
-    virtual ~Piece();
-    
+public:    
     virtual int getCurrentLocation() = 0;
 
     virtual bool getColor() = 0;
@@ -30,7 +28,7 @@ public:
     virtual std::set<int> getBlockedPosition(int, int) = 0;
 
 private:
-    virtual void generatePossibleMoves() = 0;
+    virtual void generatePossibleMoves(int) = 0;
 
     //virtual std::shared_ptr<std::set<int>> getPossibleMoves() = 0;
 };
