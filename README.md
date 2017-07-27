@@ -1,8 +1,10 @@
 # Chess
+[![asciicast](https://asciinema.org/a/130847.png)](https://asciinema.org/a/130847)
 
 ## Compiling
 You must have make and gcc in order to compile.
 * `cd chess`
+* `mkdir bin`
 * `make`
 
 Then `./bin/chess` to start.
