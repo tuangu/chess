@@ -1,6 +1,8 @@
 # Chess
 [![asciicast](https://asciinema.org/a/130847.png)](https://asciinema.org/a/130847)
 
+UML Diagram: [https://goo.gl/EhiyYz](https://goo.gl/EhiyYz)
+
 ## Compiling
 You must have make and gcc in order to compile.
 * `cd chess`
